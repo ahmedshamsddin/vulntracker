@@ -24,3 +24,23 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+
+.badge {
+  @apply inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium;
+}
+.badge-low {
+  @apply bg-green-200 text-green-800;
+}
+.badge-medium {
+  @apply bg-yellow-200 text-yellow-800;
+}
+.badge-high {
+  @apply bg-orange-200 text-orange-800;
+}
+.badge-critical {
+  @apply bg-red-200 text-red-800;
+}
+.badge-status {
+  @apply bg-slate-200 text-slate-800;
+}

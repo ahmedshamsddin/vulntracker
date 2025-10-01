@@ -1,103 +1,157 @@
-import Image from "next/image";
+"use client";
+
+import { useEffect, useState } from "react";
+import Link from "next/link";
+
+type Severity = "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
+type Status = "OPEN" | "IN_PROGRESS" | "RESOLVED" | "CLOSED";
+
+type Tag = {
+  id: number;
+  name: string;
+};
+
+type Vulnerability = {
+  id: number;
+  title: string;
+  severity: Severity;
+  status: Status;
+  createdAt: string;
+  tags: Tag[];
+  user?: { name?: string | null };
+};
+
 
 export default function Home() {
-  return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+  const [data, setData] = useState<Vulnerability[]>([]);
+  const [q, setQ] = useState("");
+  const [severity, setSeverity] = useState("");
+  const [status, setStatus] = useState("");
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+  async function load() {
+    const params = new URLSearchParams();
+    if (q) params.set("q", q);
+    if (severity) params.set("severity", severity);
+    if (status) params.set("status", status);
+
+    const res = await fetch(`/api/vulnerabilities?${params.toString()}`);
+    const json = await res.json();
+    setData(json);
+  }
+
+  useEffect(() => {
+    load();
+  }, []);
+
+  return (
+    
+    <div className="space-y-6">
+      <h1 className="text-2xl font-bold">Vulnerability Dashboard</h1>
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+  <Card label="Open" count={data.filter(v => v.status === "OPEN").length} />
+  <Card label="In Progress" count={data.filter(v => v.status === "IN_PROGRESS").length} />
+  <Card label="Resolved" count={data.filter(v => v.status === "RESOLVED").length} />
+  <Card label="Closed" count={data.filter(v => v.status === "CLOSED").length} />
+</div>
+      {/* Filters */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <input
+          value={q}
+          onChange={(e) => setQ(e.target.value)}
+          placeholder="Search title/description"
+          className="border rounded px-3 py-2"
+        />
+        <select
+          value={severity}
+          onChange={(e) => setSeverity(e.target.value)}
+          className="border rounded px-3 py-2"
+        >
+          <option value="">All severities</option>
+          {["LOW", "MEDIUM", "HIGH", "CRITICAL"].map((s) => (
+            <option key={s} value={s}>
+              {s}
+            </option>
+          ))}
+        </select>
+        <select
+          value={status}
+          onChange={(e) => setStatus(e.target.value)}
+          className="border rounded px-3 py-2"
+        >
+          <option value="">All status</option>
+          {["OPEN", "IN_PROGRESS", "RESOLVED", "CLOSED"].map((s) => (
+            <option key={s} value={s}>
+              {s}
+            </option>
+          ))}
+        </select>
+        <button
+          onClick={load}
+          className="sm:col-span-3 bg-black text-white rounded px-3 py-2"
+        >
+          Apply Filters
+        </button>
+      </div>
+
+      {/* Vulnerability list */}
+      <ul className="space-y-3">
+        {data.map((v) => (
+          <li
+            key={v.id}
+            className="bg-white rounded-xl p-4 border flex items-start justify-between"
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+            <div>
+              <Link
+                href={`/vulns/${v.id}`}
+                className="font-semibold hover:underline"
+              >
+                {v.title}
+              </Link>
+              <div className="text-sm text-slate-600">
+                {new Date(v.createdAt).toLocaleString()}
+              </div>
+              <div className="mt-1 space-x-1">
+                {v.tags?.map((t) => (
+                  <span
+                    key={t.id}
+                    className="inline-block bg-slate-200 text-slate-800 rounded px-2 py-0.5 text-xs"
+                  >
+                    #{t.name}
+                  </span>
+                ))}
+              </div>
+              <p className="text-sm text-slate-600">
+  Reported by {v.user?.name || "Unknown"}
+</p>
+            </div>
+            <div className="space-x-2">
+              <span className={`badge ${sevClass(v.severity)}`}>
+                {v.severity}
+              </span>
+              <span className="badge badge-status">{v.status}</span>
+            </div>
+          </li>
+        ))}
+        {data.length === 0 && (
+          <p className="text-sm text-slate-600">No results.</p>
+        )}
+      </ul>
+    </div>
+  );
+}
+
+function sevClass(s: Severity) {
+  if (s === "LOW") return "badge-low";
+  if (s === "MEDIUM") return "badge-medium";
+  if (s === "HIGH") return "badge-high";
+  return "badge-critical";
+}
+
+function Card({ label, count }: { label: string; count: number }) {
+  return (
+    <div className="bg-white border rounded-xl p-4 shadow-sm text-center">
+      <div className="text-xl font-bold">{count}</div>
+      <div className="text-sm text-slate-600">{label}</div>
     </div>
   );
 }
